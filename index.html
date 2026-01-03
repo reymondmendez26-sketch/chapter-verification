@@ -1,64 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chapter Member Verification</title>
-  <style>
-    body {font-family: Arial, sans-serif; background:#f2f2f2; padding:20px;}
-    .card {max-width:420px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.1)}
-    h2 {text-align:center}
-    input {width:100%; padding:10px; margin-top:10px}
-    button {width:100%; padding:10px; margin-top:10px; background:#000; color:#fff; border:none; cursor:pointer}
-    .result {margin-top:15px; padding:10px; border-radius:8px}
-    .ACTIVE{background:#d4edda}
-    .INACTIVE{background:#fff3cd}
-    .SUSPENDED,.EXPELLED{background:#f8d7da}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Member Verification</h2>
-    <input type="text" id="memberId" placeholder="Enter Member ID" />
-    <button onclick="verify()">Verify</button>
-    <div id="output"></div>
-  </div>
-
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/export?format=csv";
 
-async function verify(){
-  const id = document.getElementById('memberId').value.trim();
-  const res = await fetch(SHEET_URL);
-  const text = await res.text();
-  const rows = text.split('
-').slice(1);
-  let found = false;
+async function verify() {
+  const input = document.getElementById("memberId");
+  const output = document.getElementById("output");
+  const id = input.value.trim();
 
-  rows.forEach(r=>{
-    const [memberId, fullName, codeName, gt, dateSurvive, status, remark, position] = r.split(',');
-    if(memberId === id){
-      found = true;
-      document.getElementById('output').innerHTML = `
-        <div class="result ${status}">
-          <strong>Status: ${status}</strong><br><br>
-          <b>Full Name:</b> ${fullName}<br>
-          <b>Alexis / Medusa Name:</b> ${codeName}<br>
-          <b>GT:</b> ${gt}<br>
-          <b>Position:</b> ${position}<br>
-          <b>Date Survive:</b> ${dateSurvive}<br>
-          <b>Remark:</b> ${remark}
-        </div>`;
+  if (!id) {
+    output.innerHTML = "<div class='result EXPELLED'>PLEASE ENTER MEMBER ID</div>";
+    return;
+  }
+
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+
+    const rows = text.trim().split("\n").slice(1);
+    let found = false;
+
+    rows.forEach(row => {
+      const cols = row.replace(/\r/g, "").split(",");
+
+      const memberId = cols[0]?.trim();
+
+      if (memberId === id) {
+        found = true;
+
+        const [
+          _id,
+          fullName,
+          codeName,
+          gt,
+          dateSurvive,
+          status,
+          remark,
+          position
+        ] = cols;
+
+        output.innerHTML = `
+          <div class="result ${status}">
+            <strong>Status: ${status}</strong><br><br>
+            <b>Full Name:</b> ${fullName}<br>
+            <b>Alexis / Medusa Name:</b> ${codeName}<br>
+            <b>GT:</b> ${gt}<br>
+            <b>Position:</b> ${position}<br>
+            <b>Date Survive:</b> ${dateSurvive}<br>
+            <b>Remarks:</b> ${remark}
+          </div>
+        `;
+      }
+    });
+
+    if (!found) {
+      output.innerHTML = "<div class='result EXPELLED'>MEMBER NOT FOUND</div>";
     }
-  });
 
-  if(!found){
-    document.getElementById('output').innerHTML = '<div class="result EXPELLED">MEMBER NOT FOUND</div>';
+  } catch (err) {
+    output.innerHTML = "<div class='result EXPELLED'>ERROR LOADING DATA</div>";
+    console.error(err);
   }
 }
 </script>
-</body>
-</html>
-
-
-
