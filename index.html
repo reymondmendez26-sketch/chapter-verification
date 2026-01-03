@@ -1,63 +1,59 @@
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/export?format=csv";
 
-async function verify() {
+function verify() {
   const input = document.getElementById("memberId");
   const output = document.getElementById("output");
   const id = input.value.trim();
 
-  if (!id) {
+  if (id === "") {
     output.innerHTML = "<div class='result EXPELLED'>PLEASE ENTER MEMBER ID</div>";
     return;
   }
 
-  try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
+  fetch(SHEET_URL)
+    .then(res => res.text())
+    .then(text => {
+      const rows = text.replace(/\r/g, "").split("\n").slice(1);
+      let found = false;
 
-    const rows = text.trim().split("\n").slice(1);
-    let found = false;
+      rows.forEach(row => {
+        const cols = row.split(",");
 
-    rows.forEach(row => {
-      const cols = row.replace(/\r/g, "").split(",");
+        const memberId = cols[0]?.trim();
 
-      const memberId = cols[0]?.trim();
+        if (memberId === id) {
+          found = true;
 
-      if (memberId === id) {
-        found = true;
+          const fullName   = cols[1];
+          const codeName   = cols[2];
+          const gt         = cols[3];
+          const dateSurvive= cols[4];
+          const status     = cols[5];
+          const remark     = cols[6];
+          const position   = cols[7];
 
-        const [
-          _id,
-          fullName,
-          codeName,
-          gt,
-          dateSurvive,
-          status,
-          remark,
-          position
-        ] = cols;
+          output.innerHTML = `
+            <div class="result ${status}">
+              <strong>Status: ${status}</strong><br><br>
+              <b>Full Name:</b> ${fullName}<br>
+              <b>Alexis / Medusa Name:</b> ${codeName}<br>
+              <b>GT:</b> ${gt}<br>
+              <b>Position:</b> ${position}<br>
+              <b>Date Survive:</b> ${dateSurvive}<br>
+              <b>Remarks:</b> ${remark}
+            </div>
+          `;
+        }
+      });
 
-        output.innerHTML = `
-          <div class="result ${status}">
-            <strong>Status: ${status}</strong><br><br>
-            <b>Full Name:</b> ${fullName}<br>
-            <b>Alexis / Medusa Name:</b> ${codeName}<br>
-            <b>GT:</b> ${gt}<br>
-            <b>Position:</b> ${position}<br>
-            <b>Date Survive:</b> ${dateSurvive}<br>
-            <b>Remarks:</b> ${remark}
-          </div>
-        `;
+      if (!found) {
+        output.innerHTML = "<div class='result EXPELLED'>MEMBER NOT FOUND</div>";
       }
+    })
+    .catch(err => {
+      output.innerHTML = "<div class='result EXPELLED'>ERROR LOADING DATA</div>";
+      console.error(err);
     });
-
-    if (!found) {
-      output.innerHTML = "<div class='result EXPELLED'>MEMBER NOT FOUND</div>";
-    }
-
-  } catch (err) {
-    output.innerHTML = "<div class='result EXPELLED'>ERROR LOADING DATA</div>";
-    console.error(err);
-  }
 }
 </script>
