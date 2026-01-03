@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chapter Member Verification</title>
+  <style>
+    body {font-family: Arial, sans-serif; background:#f2f2f2; padding:20px;}
+    .card {max-width:420px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.1)}
+    h2 {text-align:center}
+    input {width:100%; padding:10px; margin-top:10px}
+    button {width:100%; padding:10px; margin-top:10px; background:#000; color:#fff; border:none; cursor:pointer}
+    .result {margin-top:15px; padding:10px; border-radius:8px}
+    .ACTIVE{background:#d4edda}
+    .INACTIVE{background:#fff3cd}
+    .SUSPENDED,.EXPELLED{background:#f8d7da}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Member Verification</h2>
+    <input type="text" id="memberId" placeholder="Enter Member ID" />
+    <button onclick="verify()">Verify</button>
+    <div id="output"></div>
+  </div>
+
+<script>
+const SHEET_URL = "PASTE_YOUR_GOOGLE_SHEET_CSV_LINK_HERE";
+
+async function verify(){
+  const id = document.getElementById('memberId').value.trim();
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  const rows = text.split('\n').slice(1);
+  let found = false;
+
+  rows.forEach(r=>{
+    const [mid,name,chapter,status,expiry] = r.split(',');
+    if(mid===id){
+      found=true;
+      document.getElementById('output').innerHTML = `
+        <div class="result ${status}">
+          <strong>${status}</strong><br>
+          Name: ${name}<br>
+          Chapter: ${chapter}<br>
+          Valid Until: ${expiry}
+        </div>`;
+    }
+  });
+
+  if(!found){
+    document.getElementById('output').innerHTML = '<div class="result EXPELLED">NOT FOUND</div>';
+  }
+}
+</script>
+</body>
+</html>
