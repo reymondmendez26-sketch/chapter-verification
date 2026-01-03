@@ -31,7 +31,8 @@ async function verify(){
   const id = document.getElementById('memberId').value.trim();
   const res = await fetch(SHEET_URL);
   const text = await res.text();
-  const rows = text.split('\n').slice(1);
+  const rows = text.split('
+').slice(1);
   let found = false;
 
   rows.forEach(r=>{
