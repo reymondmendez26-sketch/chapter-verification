@@ -182,16 +182,21 @@ function verify(memberIdFromQR = null) {
             <b>GT:</b> ${cols[3]}<br>
             <b>Date Survive:</b> ${cols[4]}<br>
             <b>Position:</b> ${cols[7]}<br>
-            <b>Remarks:</b> ${cols[6]}<br>
+            <b>Remarks:</b> ${cols[6]}<br><br>
 
-            ${cols[8] ? `<a href="${cols[8]}" target="_blank">
-              <button>View Certificate of Legitimacy</button>
-            </a>` : ""}
+          ${cols[8] ? `
+            <a href="${cols[8]}" target="_blank">
+            <button>View Certificate of Legitimacy</button>
+            </a>
+            ` : ""}
 
-            ${cols[9] ? `<a href="${cols[9]}" target="_blank">
-              <button>View Other Certificates</button>
-            </a>` : ""}
-          `;
+          ${cols[9] ? cols[9].split("|").map((link, index) => `
+            <a href="${link.trim()}" target="_blank">
+            <button>View Other Certificate ${index + 1}</button>
+            </a>
+            `).join("") : ""}
+            `;
+
         }
       }
 
@@ -215,6 +220,7 @@ window.onload = () => {
 
 </body>
 </html>
+
 
 
 
