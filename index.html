@@ -29,12 +29,8 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-
-  background-image: url("logo.png");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 1200px;   /* ← MAO NI ANG SOLUTION */
-
+  background: url("logo.png") no-repeat center center;
+  background-size: cover;
   opacity: 0.12;
   z-index: -1;
 }
@@ -43,13 +39,12 @@ body {
 .overlay {
   width: 100%;
   max-width: 520px;
-  min-height: 90vh; /* FULL LOOK SA MOBILE */
+  min-height: 90vh;
   background: rgba(0,0,0,0.85);
   padding: 35px 25px;
   border-radius: 16px;
   box-shadow: 0 0 30px rgba(0,0,0,0.9);
   color: #fff;
-
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -121,7 +116,6 @@ a button:hover {
   opacity: 0.7;
 }
 
-/* DESKTOP */
 @media (min-width: 768px) {
   .overlay {
     min-height: auto;
@@ -152,7 +146,7 @@ a button:hover {
 
 <script>
 const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/export?format=csv";
+"https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
 function verify(memberIdFromQR = null) {
   const input = document.getElementById("memberId");
@@ -165,40 +159,41 @@ function verify(memberIdFromQR = null) {
   }
 
   fetch(SHEET_URL)
-    .then(r => r.text())
+    .then(res => res.text())
     .then(text => {
-      const rows = text.split("\n").slice(1);
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      const rows = json.table.rows;
       let found = false;
 
-      for (let row of rows) {
-        const cols = row.split(",");
+      rows.forEach(r => {
+        const c = r.c.map(col => col ? col.v : "");
 
-        if (cols[0] && cols[0].trim() === id) {
+        if (c[0] === id) {
           found = true;
-          output.innerHTML = `
-            <b>Status:</b> ${cols[5]}<br>
-            <b>Full Name:</b> ${cols[1]}<br>
-            <b>Alexis / Medusa:</b> ${cols[2]}<br>
-            <b>GT:</b> ${cols[3]}<br>
-            <b>Date Survive:</b> ${cols[4]}<br>
-            <b>Position:</b> ${cols[7]}<br>
-            <b>Remarks:</b> ${cols[6]}<br><br>
 
-          ${cols[8] ? `
-            <a href="${cols[8]}" target="_blank">
-            <button>View Certificate of Legitimacy</button>
-            </a>
+          output.innerHTML = `
+            <b>Status:</b> ${c[5]}<br>
+            <b>Full Name:</b> ${c[1]}<br>
+            <b>Alexis / Medusa:</b> ${c[2]}<br>
+            <b>GT:</b> ${c[3]}<br>
+            <b>Date Survive:</b> ${c[4]}<br>
+            <b>Position:</b> ${c[7]}<br>
+            <b>Remarks:</b> ${c[6]}<br><br>
+
+            ${c[8] ? `
+              <a href="${c[8]}" target="_blank">
+                <button>View Certificate of Legitimacy</button>
+              </a>
             ` : ""}
 
-          ${cols[9] ? cols[9].split("|").map((link, index) => `
-            <a href="${link.trim()}" target="_blank">
-            <button>View Other Certificate ${index + 1}</button>
-            </a>
+            ${c[9] ? c[9].split("|").map((link, i) => `
+              <a href="${link.trim()}" target="_blank">
+                <button>View Other Certificate ${i + 1}</button>
+              </a>
             `).join("") : ""}
-            `;
-
+          `;
         }
-      }
+      });
 
       if (!found) output.innerHTML = "MEMBER NOT FOUND";
     })
@@ -220,7 +215,3 @@ window.onload = () => {
 
 </body>
 </html>
-
-
-
-
