@@ -14,26 +14,34 @@ body{
   background:#222;padding:30px;border-radius:14px;width:100%;max-width:420px;
   text-align:center;box-shadow:0 0 20px rgba(0,0,0,.8)
 }
-input,button{
-  width:100%;padding:12px;border-radius:8px;border:none;margin-top:10px
+input{
+  width:100%;padding:12px;border-radius:8px;border:none;
+  font-size:16px;margin-bottom:12px
 }
-button{background:#caa24d;font-weight:bold;cursor:pointer}
-img{margin-top:20px;width:220px;background:#fff;padding:10px;border-radius:12px}
-pre{white-space:pre-wrap;text-align:left;background:#111;padding:10px;border-radius:8px}
-small{opacity:.7}
+button{
+  width:100%;padding:12px;font-size:16px;font-weight:bold;
+  border-radius:8px;border:none;background:#caa24d;cursor:pointer
+}
+button:hover{background:#e0b85a}
+img{
+  margin-top:20px;width:220px;height:220px;background:#fff;
+  padding:10px;border-radius:12px
+}
+small{display:block;margin-top:10px;opacity:.6}
 </style>
 </head>
 
 <body>
 <div class="card">
   <h2>QR Code Generator</h2>
-  <p>Enter <b>Token (Column A)</b></p>
+  <p>Enter <b>Token</b> (Column A)</p>
 
-  <input id="token" placeholder="e.g. BRK-R9V2M6">
+  <input id="token" placeholder="e.g. BRK-R9V2M6" />
   <button onclick="gen()">Generate QR</button>
 
   <div id="out"></div>
-  <small>Use ONLY this QR for ID</small>
+
+  <small>Permanent QR – for ID printing</small>
 </div>
 
 <script>
@@ -42,22 +50,22 @@ const VERIFY_URL =
 
 function gen(){
   const raw = document.getElementById("token").value;
-  if(!raw){ alert("Enter Token"); return; }
+  if(!raw){
+    alert("Please enter token");
+    return;
+  }
 
   const cleanToken = raw.trim().toUpperCase();
   const encoded = btoa(cleanToken);
 
-  const finalURL = `${VERIFY_URL}?t=${encoded}`;
+  const finalURL = `${VERIFY_URL}?t=${encodeURIComponent(encoded)}`;
   const qrURL =
     "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
     encodeURIComponent(finalURL);
 
   document.getElementById("out").innerHTML = `
-    <img src="${qrURL}">
-    <p><b>Token:</b> ${cleanToken}</p>
-    <p><b>Base64:</b> ${encoded}</p>
-    <p><b>URL (THIS MUST WORK):</b></p>
-    <pre>${finalURL}</pre>
+    <img src="${qrURL}" alt="QR Code">
+    <p><b>${cleanToken}</b></p>
   `;
 }
 </script>
