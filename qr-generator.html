@@ -58,12 +58,6 @@ img {
   padding: 10px;
   border-radius: 12px;
 }
-
-small {
-  display: block;
-  margin-top: 10px;
-  opacity: 0.6;
-}
 </style>
 </head>
 
@@ -71,87 +65,41 @@ small {
 
 <div class="card">
   <h2>QR Code Generator</h2>
-  <p>Enter Member ID</p>
+  <p>Enter Member Token</p>
 
-  <input type="text" id="memberId" placeholder="e.g. BB-001">
+  <input type="text" id="memberId" placeholder="e.g. BRK-R9V2M6">
   <button onclick="generateQR()">Generate QR</button>
 
   <div id="qrBox"></div>
-
-  <small>Scan QR to auto-verify member</small>
 </div>
 
 <script>
 const SECRET = "BB2025";
+const VERIFY_URL =
+"https://reymondmendez26-sketch.github.io/bunawan-brook-verify/";
 
-const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
+function generateQR() {
+  const id = document.getElementById("memberId").value.trim();
+  const box = document.getElementById("qrBox");
 
-const params = new URLSearchParams(window.location.search);
-const encrypted = params.get("t");
-const output = document.getElementById("output");
-
-if (!encrypted) {
-  output.innerHTML = "INVALID OR MISSING QR CODE";
-} else {
-  let token = "";
-
-  try {
-    const decoded = atob(encrypted);
-    const parts = decoded.split("|");
-
-    if (parts[1] !== SECRET) throw "Invalid";
-
-    token = parts[0];
-  } catch {
-    output.innerHTML = "INVALID OR TAMPERED QR CODE";
-    throw new Error("Invalid QR");
+  if (!id) {
+    alert("Enter Member Token");
+    return;
   }
 
-  fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.substring(47).slice(0, -2));
-      const rows = json.table.rows;
-      let found = false;
+  const encrypted = btoa(id + "|" + SECRET);
+  const finalURL = `${VERIFY_URL}?t=${encodeURIComponent(encrypted)}`;
 
-      rows.forEach(r => {
-        const c = r.c.map(col => col ? col.v : "");
+  const qrURL =
+    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+    encodeURIComponent(finalURL);
 
-        if (c[0] === token) {
-          found = true;
-
-          output.innerHTML = `
-            <b>Status:</b> ${c[6]}<br>
-            <b>Full Name:</b> ${c[2]}<br>
-            <b>Alexis / Medusa:</b> ${c[3]}<br>
-            <b>GT:</b> ${c[4]}<br>
-            <b>Date Survive:</b> ${c[5]}<br>
-            <b>Position:</b> ${c[8]}<br>
-            <b>Remarks:</b> ${c[7]}<br><br>
-
-            ${c[9] ? `<a href="${c[9]}" target="_blank">
-              <button>View Certificate</button>
-            </a>` : ""}
-
-            ${c[10] ? c[10].split("|").map((l,i)=>`
-              <a href="${l.trim()}" target="_blank">
-                <button>Other Certificate ${i+1}</button>
-              </a>
-            `).join("") : ""}
-          `;
-        }
-      });
-
-      if (!found) output.innerHTML = "MEMBER NOT FOUND";
-    })
-    .catch(() => {
-      output.innerHTML = "ERROR LOADING DATA";
-    });
+  box.innerHTML = `
+    <img src="${qrURL}">
+    <p><b>${id}</b></p>
+  `;
 }
 </script>
 
 </body>
 </html>
-
-
