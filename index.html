@@ -92,16 +92,55 @@ a button {
 </div>
 
 <script>
+const SECRET = "BB2025";
+
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
 const params = new URLSearchParams(window.location.search);
-const token = params.get("t");
+const encrypted = params.get("t");
 const output = document.getElementById("output");
 
-if (!token) {
+/* 🔒 HIDE TOKEN FROM URL */
+if (encrypted) {
+  history.replaceState({}, document.title, window.location.pathname);
+}
+
+/* 📅 DATE FORMAT FIX */
+function formatDate(value) {
+  if (!value) return "";
+  if (typeof value === "string" && value.startsWith("Date")) {
+    const nums = value.match(/\d+/g).map(Number);
+    const d = new Date(nums[0], nums[1], nums[2]);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
+  const d = new Date(value);
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+if (!encrypted) {
   output.innerHTML = "INVALID OR MISSING QR CODE";
 } else {
+  let token = "";
+
+  try {
+    const decoded = atob(encrypted);
+    const parts = decoded.split("|");
+    if (parts[1] !== SECRET) throw "Invalid";
+    token = parts[0];
+  } catch {
+    output.innerHTML = "INVALID OR TAMPERED QR CODE";
+    throw new Error("Invalid QR");
+  }
+
   fetch(SHEET_URL)
     .then(res => res.text())
     .then(text => {
@@ -120,7 +159,7 @@ if (!token) {
             <b>Full Name:</b> ${c[2]}<br>
             <b>Alexis / Medusa:</b> ${c[3]}<br>
             <b>GT:</b> ${c[4]}<br>
-            <b>Date Survive:</b> ${c[5]}<br>
+            <b>Date Survive:</b> ${formatDate(c[5])}<br>
             <b>Position:</b> ${c[8]}<br>
             <b>Remarks:</b> ${c[7]}<br><br>
 
@@ -142,19 +181,8 @@ if (!token) {
     .catch(() => {
       output.innerHTML = "ERROR LOADING DATA";
     });
-  function formatDate(d) {
-  if (!d) return "";
-  const date = new Date(d);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-}
-
 }
 </script>
 
 </body>
 </html>
-
