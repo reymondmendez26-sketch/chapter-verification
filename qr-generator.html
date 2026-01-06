@@ -82,33 +82,76 @@ small {
 </div>
 
 <script>
-/* ✅ FINAL, CORRECT VERIFY URL */
-const VERIFY_URL =
-"https://reymondmendez26-sketch.github.io/bunawan-brook-verify/";
+const SECRET = "BB2025";
 
-function generateQR() {
-  const id = document.getElementById("memberId").value.trim();
-  const box = document.getElementById("qrBox");
+const SHEET_URL =
+"https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
-  if (!id) {
-    alert("Enter Member ID");
-    return;
+const params = new URLSearchParams(window.location.search);
+const encrypted = params.get("t");
+const output = document.getElementById("output");
+
+if (!encrypted) {
+  output.innerHTML = "INVALID OR MISSING QR CODE";
+} else {
+  let token = "";
+
+  try {
+    const decoded = atob(encrypted);
+    const parts = decoded.split("|");
+
+    if (parts[1] !== SECRET) throw "Invalid";
+
+    token = parts[0];
+  } catch {
+    output.innerHTML = "INVALID OR TAMPERED QR CODE";
+    throw new Error("Invalid QR");
   }
 
-  /* ✅ USE ?t= (MATCHES VERIFICATION PAGE) */
-  const finalURL = `${VERIFY_URL}?t=${encodeURIComponent(id)}`;
+  fetch(SHEET_URL)
+    .then(res => res.text())
+    .then(text => {
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      const rows = json.table.rows;
+      let found = false;
 
-  const qrURL =
-    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
-    encodeURIComponent(finalURL);
+      rows.forEach(r => {
+        const c = r.c.map(col => col ? col.v : "");
 
-  box.innerHTML = `
-    <img src="${qrURL}">
-    <p><b>${id}</b></p>
-  `;
+        if (c[0] === token) {
+          found = true;
+
+          output.innerHTML = `
+            <b>Status:</b> ${c[6]}<br>
+            <b>Full Name:</b> ${c[2]}<br>
+            <b>Alexis / Medusa:</b> ${c[3]}<br>
+            <b>GT:</b> ${c[4]}<br>
+            <b>Date Survive:</b> ${c[5]}<br>
+            <b>Position:</b> ${c[8]}<br>
+            <b>Remarks:</b> ${c[7]}<br><br>
+
+            ${c[9] ? `<a href="${c[9]}" target="_blank">
+              <button>View Certificate</button>
+            </a>` : ""}
+
+            ${c[10] ? c[10].split("|").map((l,i)=>`
+              <a href="${l.trim()}" target="_blank">
+                <button>Other Certificate ${i+1}</button>
+              </a>
+            `).join("") : ""}
+          `;
+        }
+      });
+
+      if (!found) output.innerHTML = "MEMBER NOT FOUND";
+    })
+    .catch(() => {
+      output.innerHTML = "ERROR LOADING DATA";
+    });
 }
 </script>
 
 </body>
 </html>
+
 
