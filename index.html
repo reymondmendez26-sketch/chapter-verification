@@ -149,32 +149,35 @@ if (!encrypted) {
       let found = false;
 
       rows.forEach(r => {
-        const c = r.c.map(col => col ? col.v : "");
+      const c = r.c.map(col => {
+       if (!col) return "";
+       return col.f ? col.f : col.v;
+        });
 
-        if (c[0] === token) {
-          found = true;
+      if (c[0] === token) {
+        found = true;
 
-          output.innerHTML = `
-            <b>Status:</b> ${c[6]}<br>
-            <b>Full Name:</b> ${c[2]}<br>
-            <b>Alexis / Medusa:</b> ${c[3]}<br>
-            <b>GT:</b> ${c[4]}<br>
-            <b>Date Survive:</b> ${formatDate(c[5])}<br>
-            <b>Position:</b> ${c[8]}<br>
-            <b>Remarks:</b> ${c[7]}<br><br>
+        output.innerHTML = `
+          <b>Status:</b> ${c[6]}<br>
+          <b>Full Name:</b> ${c[2]}<br>
+          <b>Alexis / Medusa:</b> ${c[3]}<br>
+          <b>GT:</b> ${c[4]}<br>
+          <b>Date Survive:</b> ${c[5]}<br>
+          <b>Position:</b> ${c[8]}<br>
+          <b>Remarks:</b> ${c[7]}<br><br>
 
-            ${c[9] ? `<a href="${c[9]}" target="_blank">
-              <button>View Certificate</button>
+          ${c[9] ? `<a href="${c[9]}" target="_blank">
+            <button>View Certificate</button>
             </a>` : ""}
 
-            ${c[10] ? c[10].split("|").map((l,i)=>`
-              <a href="${l.trim()}" target="_blank">
-                <button>Other Certificate ${i+1}</button>
-              </a>
+          ${c[10] ? c[10].split("|").map((l,i)=>`
+            <a href="${l.trim()}" target="_blank">
+            <button>Other Certificate ${i+1}</button>
+            </a>
             `).join("") : ""}
-          `;
+            `;
         }
-      });
+        });
 
       if (!found) output.innerHTML = "MEMBER NOT FOUND / INVALID QR";
     })
@@ -186,3 +189,4 @@ if (!encrypted) {
 
 </body>
 </html>
+
