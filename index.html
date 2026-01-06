@@ -6,121 +6,99 @@
 <title>Bunawan Brook | Verification</title>
 
 <style>
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:Arial;
-  background:#111;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:15px;
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  color: #fff;
 }
-.bg-logo{
-  position:fixed;
-  inset:0;
-  background:url("logo.png") center/cover no-repeat;
-  opacity:.12;
-  z-index:-1;
+
+.bg-logo {
+  position: fixed;
+  inset: 0;
+  background: url("logo.png") no-repeat center;
+  background-size: cover;
+  opacity: 0.12;
+  z-index: -1;
 }
-.overlay{
-  width:100%;
-  max-width:520px;
-  min-height:85vh;
-  background:rgba(0,0,0,.88);
-  padding:35px 25px;
-  border-radius:16px;
-  box-shadow:0 0 30px rgba(0,0,0,.9);
-  color:#fff;
-  text-align:center;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
+
+.overlay {
+  width: 100%;
+  max-width: 520px;
+  min-height: 80vh;
+  background: rgba(0,0,0,0.88);
+  padding: 35px 25px;
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
 }
-#output{
-  margin-top:20px;
-  padding:18px;
-  border-radius:10px;
-  background:rgba(255,255,255,.12);
-  line-height:1.7;
+
+h1 { font-size: 26px; margin-bottom: 6px; }
+h2 { font-size: 14px; opacity: 0.7; margin-bottom: 25px; }
+
+#output {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  font-size: 14px;
+  line-height: 1.7;
 }
-a button{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  background:#2ecc71;
+
+.footer {
+  margin-top: 25px;
+  font-size: 12px;
+  opacity: 0.6;
 }
-.footer{margin-top:25px;font-size:12px;opacity:.6}
 </style>
 </head>
 
 <body>
+
 <div class="bg-logo"></div>
 
 <div class="overlay">
-  <h2>Bunawan Brook Chapter</h2>
-  <div id="output">Scanning QR…</div>
-  <div class="footer">QR-based verification only</div>
+  <h1>Bunawan Brook Chapter</h1>
+  <h2>Official QR Verification</h2>
+
+  <div id="output">PAGE LOADED – WAITING FOR TOKEN…</div>
+
+  <div class="footer">
+    QR-based verification only<br>
+    Unauthorized editing is not allowed
+  </div>
 </div>
 
 <script>
-  alert("NEW VERSION LOADED");
-const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
+/* ===============================
+   🔥 FORCE DEPLOY + LOAD TEST
+   =============================== */
+alert("NEW VERSION LOADED");
 
-const params = new URLSearchParams(window.location.search);
-const encoded = params.get("t");
+/* ===============================
+   BASIC TOKEN CHECK (NO SHEET YET)
+   =============================== */
 const output = document.getElementById("output");
+const params = new URLSearchParams(window.location.search);
+const token = params.get("t");
 
-if (!encoded) {
-  output.innerHTML = "INVALID OR MISSING QR CODE";
-  throw "";
+if (!token) {
+  output.innerHTML = "❌ NO TOKEN FOUND IN URL";
+} else {
+  output.innerHTML = "✅ TOKEN RECEIVED:<br><br><b>" + token + "</b>";
 }
+</script>
 
-let token="";
-try{
-  token = atob(encoded).trim().toUpperCase();
-}catch{
-  output.innerHTML="INVALID QR CODE";
-  throw "";
-}
-
-fetch(SHEET_URL)
-.then(r=>r.text())
-.then(t=>{
-  const json = JSON.parse(t.substring(47).slice(0,-2));
-  const rows = json.table.rows;
-  const headers = json.table.cols.map(c=>c.label.trim());
-
-  let found=false;
-
-  rows.forEach(r=>{
-    const row={};
-    r.c.forEach((cell,i)=>{
-      row[headers[i]] = cell ? (cell.f ?? cell.v) : "";
-    });
-
-    if (String(row["Token"]).trim().toUpperCase() === token) {
-      found=true;
-      output.innerHTML = `
-        <b>Status:</b> ${row["Status"]}<br>
-        <b>Full Name:</b> ${row["FullName"]}<br>
-        <b>Alexis / Medusa:</b> ${row["Alexis/Medusa Name"]}<br>
-        <b>GT:</b> ${row["GT"]}<br>
-        <b>Date Survive:</b> ${row["DateSurvive"]}<br>
-        <b>Position:</b> ${row["Position"]}<br>
-        <b>Remarks:</b> ${row["Remark"]}<br><br>
-
-        ${row["CertificateOfLegitimacy"] ? `
-          <a href="${row["CertificateOfLegitimacy"]}" target="_blank">
-            <button>View Certificate</button>
-          </a>` : ""}
-
-        ${row["OtherCertificates"] ? row["OtherCertificates"].split("|").map((l,i)=>`
-          <a href="${l.trim()}" target="_blank">
-            <button>Other Certificate ${
-
-
+<!-- force github pages rebuild -->
+</body>
+</html>
