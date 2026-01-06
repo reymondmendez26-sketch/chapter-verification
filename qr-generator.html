@@ -1,87 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>QR Generator | Bunawan Brook</title>
 
 <style>
 body{
-  background:#111;
-  color:#fff;
-  font-family:Arial;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:100vh;
+  font-family:Arial,sans-serif;background:#111;color:#fff;min-height:100vh;
+  display:flex;align-items:center;justify-content:center
 }
 .card{
-  background:#222;
-  padding:30px;
-  border-radius:14px;
-  width:100%;
-  max-width:420px;
-  text-align:center;
-  box-shadow:0 0 20px rgba(0,0,0,.8);
+  background:#222;padding:30px;border-radius:14px;width:100%;max-width:420px;
+  text-align:center;box-shadow:0 0 20px rgba(0,0,0,.8)
 }
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border-radius:8px;
-  border:none;
+input{
+  width:100%;padding:12px;border-radius:8px;border:none;font-size:16px;margin-bottom:12px
 }
 button{
-  background:#caa24d;
-  font-weight:bold;
-  cursor:pointer;
+  width:100%;padding:12px;font-size:16px;font-weight:bold;border-radius:8px;border:none;
+  background:#caa24d;cursor:pointer
 }
 img{
-  margin-top:20px;
-  width:220px;
-  background:#fff;
-  padding:10px;
-  border-radius:12px;
+  margin-top:20px;width:220px;height:220px;background:#fff;padding:10px;border-radius:12px
 }
-small{opacity:.6}
+small{display:block;margin-top:10px;opacity:.6}
 </style>
 </head>
 
 <body>
-
 <div class="card">
   <h2>QR Code Generator</h2>
-  <p>Enter Member TOKEN</p>
-
-  <input id="memberId" placeholder="e.g. BRK-R9V2M6">
-  <button onclick="generateQR()">Generate QR</button>
-
-  <div id="qrBox"></div>
-  <small>Permanent QR for ID</small>
+  <p>Enter <b>Token</b> (Column A)</p>
+  <input id="token" placeholder="e.g. BRK-R9V2M6"/>
+  <button onclick="gen()">Generate QR</button>
+  <div id="out"></div>
+  <small>Permanent QR – for ID printing</small>
 </div>
 
 <script>
 const VERIFY_URL =
 "https://reymondmendez26-sketch.github.io/bunawan-brook-verify/";
 
-function generateQR(){
-  const token = document.getElementById("memberId").value.trim();
-  const box = document.getElementById("qrBox");
-
-  if(!token){
-    alert("Enter Member Token");
-    return;
-  }
-
-  const encoded = btoa(token);
-  const finalURL = VERIFY_URL + "?t=" + encodeURIComponent(encoded);
-
-  box.innerHTML = `
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(finalURL)}">
-    <p><b>${token}</b></p>
+function gen(){
+  const t = document.getElementById("token").value.trim();
+  if(!t){ alert("Enter Token"); return; }
+  const enc = btoa(t); // hide token
+  const finalURL = `${VERIFY_URL}?t=${encodeURIComponent(enc)}`;
+  const qr = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data="
+            + encodeURIComponent(finalURL);
+  document.getElementById("out").innerHTML = `
+    <img src="${qr}"><p><b>${t}</b></p>
   `;
 }
 </script>
-
 </body>
 </html>
