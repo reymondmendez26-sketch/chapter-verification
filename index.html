@@ -6,71 +6,46 @@
 <title>Bunawan Brook | Verification</title>
 
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-  background: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 15px;
+body{
+  margin:0;
+  min-height:100vh;
+  background:#111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial;
 }
-
-.bg-logo {
-  position: fixed;
-  inset: 0;
-  background: url("logo.png") no-repeat center;
-  background-size: cover;
-  opacity: 0.12;
-  z-index: -1;
+.bg-logo{
+  position:fixed;
+  inset:0;
+  background:url("logo.png") center/cover no-repeat;
+  opacity:.12;
+  z-index:-1;
 }
-
-.overlay {
-  width: 100%;
-  max-width: 520px;
-  min-height: 85vh;
-  background: rgba(0,0,0,0.88);
-  padding: 35px 25px;
-  border-radius: 16px;
-  box-shadow: 0 0 30px rgba(0,0,0,0.9);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+.box{
+  background:rgba(0,0,0,.88);
+  color:#fff;
+  padding:30px;
+  border-radius:16px;
+  max-width:520px;
+  width:100%;
+  text-align:center;
 }
-
-h1 { font-size: 26px; margin-bottom: 5px; }
-h2 { font-size: 14px; opacity: 0.7; margin-bottom: 25px; }
-
-#output {
-  margin-top: 20px;
-  padding: 18px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.12);
-  font-size: 14px;
-  line-height: 1.7;
+#out{
+  margin-top:20px;
+  background:rgba(255,255,255,.12);
+  padding:18px;
+  border-radius:10px;
+  line-height:1.6;
 }
-
-a button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 8px;
-  border: none;
-  background: #2ecc71;
-  cursor: pointer;
-}
-
-.footer {
-  margin-top: 25px;
-  font-size: 12px;
-  opacity: 0.6;
+button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  background:#2ecc71;
 }
 </style>
 </head>
@@ -79,114 +54,64 @@ a button {
 
 <div class="bg-logo"></div>
 
-<div class="overlay">
-  <h1>Bunawan Brook Chapter</h1>
-  <h2>Official QR Verification</h2>
-
-  <div id="output">Scanning QR…</div>
-
-  <div class="footer">
-    QR-based verification only<br>
-    Unauthorized editing is not allowed
-  </div>
+<div class="box">
+  <h2>Bunawan Brook Chapter</h2>
+  <div id="out">Scanning QR…</div>
 </div>
 
 <script>
 const SECRET = "BB2025";
-
-const SHEET_URL =
+const SHEET =
 "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
-const params = new URLSearchParams(window.location.search);
-const encrypted = params.get("t");
-const output = document.getElementById("output");
+const params = new URLSearchParams(location.search);
+const enc = params.get("t");
+const out = document.getElementById("out");
 
-/* 🔒 HIDE TOKEN FROM URL */
-if (encrypted) {
-  history.replaceState({}, document.title, window.location.pathname);
+if(!enc){
+  out.innerHTML="INVALID QR";
+  throw "";
 }
 
-/* 📅 DATE FORMAT FIX */
-function formatDate(value) {
-  if (!value) return "";
-  if (typeof value === "string" && value.startsWith("Date")) {
-    const nums = value.match(/\d+/g).map(Number);
-    const d = new Date(nums[0], nums[1], nums[2]);
-    return d.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  }
-  const d = new Date(value);
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
+let token="";
+try{
+  const decoded = atob(enc);
+  const p = decoded.split("|");
+  if(p[1]!==SECRET) throw "";
+  token = p[0];
+}catch{
+  out.innerHTML="INVALID OR TAMPERED QR";
+  throw "";
+}
+
+fetch(SHEET)
+.then(r=>r.text())
+.then(t=>{
+  const j=JSON.parse(t.substring(47).slice(0,-2));
+  let found=false;
+
+  j.table.rows.forEach(r=>{
+    const c=r.c.map(x=>x? (x.f ?? x.v):"");
+    if(c[0]===token){
+      found=true;
+      out.innerHTML=`
+        <b>Status:</b> ${c[6]}<br>
+        <b>Name:</b> ${c[2]}<br>
+        <b>Alexis:</b> ${c[3]}<br>
+        <b>GT:</b> ${c[4]}<br>
+        <b>Date Survive:</b> ${c[5]}<br>
+        <b>Position:</b> ${c[8]}<br>
+        <b>Remarks:</b> ${c[7]}<br>
+
+        ${c[9]?`<a href="${c[9]}" target="_blank"><button>View Certificate</button></a>`:""}
+      `;
+    }
   });
-}
 
-if (!encrypted) {
-  output.innerHTML = "INVALID OR MISSING QR CODE";
-} else {
-  let token = "";
-
-  try {
-    const decoded = atob(encrypted);
-    const parts = decoded.split("|");
-    if (parts[1] !== SECRET) throw "Invalid";
-    token = parts[0];
-  } catch {
-    output.innerHTML = "INVALID OR TAMPERED QR CODE";
-    throw new Error("Invalid QR");
-  }
-
-  fetch(SHEET_URL)
-    .then(res => res.text())
-    .then(text => {
-      const json = JSON.parse(text.substring(47).slice(0, -2));
-      const rows = json.table.rows;
-      let found = false;
-
-      rows.forEach(r => {
-      const c = r.c.map(col => {
-       if (!col) return "";
-       return col.f ? col.f : col.v;
-        });
-
-      if (c[0] === token) {
-        found = true;
-
-        output.innerHTML = `
-          <b>Status:</b> ${c[6]}<br>
-          <b>Full Name:</b> ${c[2]}<br>
-          <b>Alexis / Medusa:</b> ${c[3]}<br>
-          <b>GT:</b> ${c[4]}<br>
-          <b>Date Survive:</b> ${c[5]}<br>
-          <b>Position:</b> ${c[8]}<br>
-          <b>Remarks:</b> ${c[7]}<br><br>
-
-          ${c[9] ? `<a href="${c[9]}" target="_blank">
-            <button>View Certificate</button>
-            </a>` : ""}
-
-          ${c[10] ? c[10].split("|").map((l,i)=>`
-            <a href="${l.trim()}" target="_blank">
-            <button>Other Certificate ${i+1}</button>
-            </a>
-            `).join("") : ""}
-            `;
-        }
-        });
-
-      if (!found) output.innerHTML = "MEMBER NOT FOUND / INVALID QR";
-    })
-    .catch(() => {
-      output.innerHTML = "ERROR LOADING DATA";
-    });
-}
+  if(!found) out.innerHTML="MEMBER NOT FOUND";
+})
+.catch(()=>out.innerHTML="ERROR LOADING DATA");
 </script>
 
 </body>
 </html>
-
