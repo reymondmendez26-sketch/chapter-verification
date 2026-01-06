@@ -1,167 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bunawan Brook | Verification</title>
 
 <style>
 *{box-sizing:border-box}
-
 body{
-  margin:0;
-  min-height:100vh;
-  font-family:Arial;
-  background:#111;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:15px;
+  margin:0;min-height:100vh;font-family:Arial,sans-serif;background:#111;
+  display:flex;align-items:center;justify-content:center;padding:15px;color:#fff
 }
-
 .bg-logo{
-  position:fixed;
-  inset:0;
-  background:url("logo.png") center/cover no-repeat;
-  opacity:.12;
-  z-index:-1;
+  position:fixed;inset:0;background:url("logo.png") no-repeat center;
+  background-size:cover;opacity:.12;z-index:-1
 }
-
 .overlay{
-  width:100%;
-  max-width:520px;
-  min-height:85vh;
-  background:rgba(0,0,0,.88);
-  padding:35px 25px;
-  border-radius:16px;
-  box-shadow:0 0 30px rgba(0,0,0,.9);
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  text-align:center;
+  width:100%;max-width:520px;min-height:85vh;background:rgba(0,0,0,.88);
+  padding:35px 25px;border-radius:16px;box-shadow:0 0 30px rgba(0,0,0,.9);
+  display:flex;flex-direction:column;justify-content:center;text-align:center
 }
-
-h1{font-size:26px;margin-bottom:5px}
+h1{font-size:26px;margin-bottom:6px}
 h2{font-size:14px;opacity:.7;margin-bottom:25px}
-
 #output{
-  margin-top:20px;
-  padding:18px;
-  border-radius:10px;
-  background:rgba(255,255,255,.12);
-  font-size:14px;
-  line-height:1.7;
+  margin-top:20px;padding:18px;border-radius:10px;
+  background:rgba(255,255,255,.12);font-size:14px;line-height:1.7
 }
-
 a button{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  font-size:16px;
-  font-weight:bold;
-  border-radius:8px;
-  border:none;
-  background:#2ecc71;
-  cursor:pointer;
+  width:100%;padding:14px;margin-top:12px;font-size:16px;font-weight:bold;
+  border-radius:8px;border:none;background:#2ecc71;cursor:pointer
 }
-
-.footer{
-  margin-top:25px;
-  font-size:12px;
-  opacity:.6;
-}
+.footer{margin-top:25px;font-size:12px;opacity:.6}
 </style>
 </head>
 
 <body>
-
 <div class="bg-logo"></div>
 
 <div class="overlay">
   <h1>Bunawan Brook Chapter</h1>
   <h2>Official QR Verification</h2>
-
   <div id="output">Scanning QR…</div>
-
   <div class="footer">
-    QR-based verification only<br>
+    QR-based verification only<br/>
     Unauthorized editing is not allowed
   </div>
 </div>
 
 <script>
+/* =========================
+   CONFIG
+========================= */
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
+/* =========================
+   DATE FORMAT FIX (FINAL)
+========================= */
+function formatDate(val){
+  if(!val) return "";
+
+  // Google Sheets format: Date(YYYY,MM,DD)
+  if (typeof val === "string" && val.startsWith("Date(")) {
+    const parts = val.match(/\d+/g);
+    if (parts && parts.length >= 3) {
+      const y = Number(parts[0]);
+      const m = Number(parts[1]); // already 0-based
+      const d = Number(parts[2]);
+      const date = new Date(y, m, d);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
+  }
+
+  // Fallback (normal date)
+  const date = new Date(val);
+  if (isNaN(date)) return val;
+
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+/* =========================
+   READ & DECODE TOKEN
+========================= */
 const params = new URLSearchParams(window.location.search);
 const encoded = params.get("t");
 const output = document.getElementById("output");
 
 if(!encoded){
   output.innerHTML = "INVALID OR MISSING QR CODE";
-}else{
-  let token = "";
+  throw "";
+}
 
-  try{
-    token = atob(encoded).trim();
-  }catch{
-    output.innerHTML = "INVALID QR CODE";
-    throw "";
-  }
+let token = "";
+try{
+  token = atob(encoded).trim(); // permanent hidden token
+}catch(e){
+  output.innerHTML = "INVALID QR CODE";
+  throw "";
+}
 
-  fetch(SHEET_URL)
-    .then(res=>res.text())
-    .then(text=>{
-      const json = JSON.parse(text.substring(47).slice(0,-2));
-      const rows = json.table.rows;
-      let found = false;
+/* =========================
+   FETCH & VERIFY
+========================= */
+fetch(SHEET_URL)
+  .then(r => r.text())
+  .then(text => {
+    const json = JSON.parse(text.substring(47).slice(0,-2));
+    const rows = json.table.rows;
+    let found = false;
 
-      rows.forEach(r=>{
-        const c = r.c.map(col=>{
-          if(!col) return "";
-          return col.f ? col.f : col.v;
-        });
+    rows.forEach(r => {
+      const c = r.c.map(x => x ? x.v : "");
 
-        /* ✅ FINAL FIX: normalize both sides */
-        if(
-          String(c[0]).trim().toUpperCase() ===
-          String(token).trim().toUpperCase()
-        ){
-          found = true;
+      /*
+        Columns:
+        A Token
+        B MemberID
+        C FullName
+        D Alexis/Medusa Name
+        E GT
+        F DateSurvive
+        G Status
+        H Remark
+        I Position
+        J CertificateOfLegitimacy
+        K OtherCertificates
+      */
 
-          output.innerHTML = `
-            <b>Status:</b> ${c[6]}<br>
-            <b>Full Name:</b> ${c[2]}<br>
-            <b>Alexis / Medusa:</b> ${c[3]}<br>
-            <b>GT:</b> ${c[4]}<br>
-            <b>Date Survive:</b> ${c[5]}<br>
-            <b>Position:</b> ${c[8]}<br>
-            <b>Remarks:</b> ${c[7]}<br><br>
+      if (c[0] === token) {
+        found = true;
 
-            ${c[9] ? `
-              <a href="${c[9]}" target="_blank">
-                <button>View Certificate</button>
-              </a>
-            ` : ""}
-
-            ${c[10] ? c[10].split("|").map((l,i)=>`
+        const others = c[10]
+          ? c[10].split("|").map((l,i)=>`
               <a href="${l.trim()}" target="_blank">
                 <button>Other Certificate ${i+1}</button>
-              </a>
-            `).join("") : ""}
-          `;
-        }
-      });
+              </a>`).join("")
+          : "";
 
-      if(!found){
-        output.innerHTML = "MEMBER NOT FOUND / INVALID QR";
+        output.innerHTML = `
+          <b>Status:</b> ${c[6]}<br>
+          <b>Full Name:</b> ${c[2]}<br>
+          <b>Alexis / Medusa:</b> ${c[3]}<br>
+          <b>GT:</b> ${c[4]}<br>
+          <b>Date Survive:</b> ${formatDate(c[5])}<br>
+          <b>Position:</b> ${c[8]}<br>
+          <b>Remarks:</b> ${c[7]}<br><br>
+
+          ${c[9] ? `
+            <a href="${c[9]}" target="_blank">
+              <button>View Certificate of Legitimacy</button>
+            </a>` : ""}
+
+          ${others}
+        `;
       }
-    })
-    .catch(()=>{
-      output.innerHTML = "ERROR LOADING DATA";
     });
-}
+
+    if (!found) output.innerHTML = "MEMBER NOT FOUND / INVALID QR";
+  })
+  .catch(() => {
+    output.innerHTML = "ERROR LOADING DATA";
+  });
 </script>
 
 </body>
