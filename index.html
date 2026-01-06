@@ -123,8 +123,13 @@ if(!encoded){
           return col.f ? col.f : col.v;
         });
 
-        if(c[0] === token){
+        /* ✅ FINAL FIX: normalize both sides */
+        if(
+          String(c[0]).trim().toUpperCase() ===
+          String(token).trim().toUpperCase()
+        ){
           found = true;
+
           output.innerHTML = `
             <b>Status:</b> ${c[6]}<br>
             <b>Full Name:</b> ${c[2]}<br>
