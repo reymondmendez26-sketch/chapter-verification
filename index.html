@@ -1,4 +1,3 @@
-alert("NEW VERSION LOADED");
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,6 +67,7 @@ a button{
 </div>
 
 <script>
+  alert("NEW VERSION LOADED");
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1NTDDp-Ow6-HTgChNrH85WpWpw80EMEA-ZpjpgYe674k/gviz/tq?tqx=out:json";
 
@@ -122,4 +122,5 @@ fetch(SHEET_URL)
         ${row["OtherCertificates"] ? row["OtherCertificates"].split("|").map((l,i)=>`
           <a href="${l.trim()}" target="_blank">
             <button>Other Certificate ${
+
 
