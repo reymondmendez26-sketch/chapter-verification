@@ -142,8 +142,19 @@ if (!token) {
     .catch(() => {
       output.innerHTML = "ERROR LOADING DATA";
     });
+  function formatDate(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
 }
 </script>
 
 </body>
 </html>
+
