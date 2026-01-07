@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;min-height:100vh;font-family:Arial;background:#111;
+  display:flex;align-items:center;justify-content:center;color:#fff
+}
+.box{
+  background:#222;padding:30px;border-radius:14px;
+  width:100%;max-width:380px;box-shadow:0 0 25px rgba(0,0,0,.9)
+}
+h2{text-align:center}
+input,button{
+  width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;font-size:16px
+}
+button{background:#caa24d;font-weight:bold;cursor:pointer}
+small{opacity:.6;display:block;text-align:center}
+#error{color:#ff6b6b;text-align:center}
+</style>
+</head>
+
+<body>
+<div class="box">
+  <h2>Admin Login</h2>
+
+  <input value="Grand Triskelion" disabled>
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <small>Default password: 1968</small>
+  <div id="error"></div>
+</div>
+
+<script>
+/* 🔴 PASTE YOUR WEB APP URL HERE */
+const API_URL = "PASTE_WEB_APP_URL_HERE";
+
+function login(){
+  const pwd = document.getElementById("password").value;
+  const error = document.getElementById("error");
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"login",
+      password:pwd
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success){
+      error.innerText = "Invalid password";
+      return;
+    }
+
+    sessionStorage.setItem("bbc_admin","true");
+
+    if(res.forceChange){
+      window.location.href = "change-password.html";
+    }else{
+      window.location.href = "admin-dashboard.html";
+    }
+  })
+  .catch(()=> error.innerText="Connection error");
+}
+</script>
+</body>
+</html>
