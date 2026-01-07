@@ -103,14 +103,13 @@ let selectedIndex = -1;
 fetch(API_URL,{
   method:"POST",
   body:JSON.stringify({
-    action:"list",
-    password:prompt("Confirm admin password")
+    action:"listMembers"
   })
 })
 .then(r=>r.json())
 .then(res=>{
   if(!res.success){
-    alert("Unauthorized");
+    alert("Session expired");
     window.location.href="admin-login.html";
     return;
   }
