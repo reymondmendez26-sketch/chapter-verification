@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Generate Member ID</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:#111;
+  font-family:Arial;
+  color:#fff;
+  padding:20px;
+}
+
+.wrapper{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.id-card{
+  width:340px;
+  height:215px;
+  background:#000;
+  border-radius:14px;
+  padding:14px;
+  box-shadow:0 0 20px rgba(0,0,0,.8);
+  position:relative;
+  color:#fff;
+}
+
+.front{
+  background:url("logo.png") no-repeat center/cover;
+}
+
+.overlay{
+  background:rgba(0,0,0,.8);
+  height:100%;
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+}
+
+.photo{
+  width:90px;
+  height:110px;
+  background:#444;
+  border-radius:8px;
+  overflow:hidden;
+  margin-right:10px;
+}
+
+.photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.info{
+  font-size:12px;
+  line-height:1.4;
+}
+
+.info b{color:#caa24d}
+
+.back{
+  background:#111;
+}
+
+.qr{
+  width:120px;
+  height:120px;
+  background:#fff;
+  padding:6px;
+  border-radius:8px;
+  margin:auto;
+}
+
+.footer{
+  position:absolute;
+  bottom:10px;
+  width:100%;
+  text-align:center;
+  font-size:10px;
+  opacity:.7;
+}
+
+button{
+  margin-top:20px;
+  padding:12px 18px;
+  font-size:14px;
+  border:none;
+  border-radius:8px;
+  background:#caa24d;
+  font-weight:bold;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<script>
+if(sessionStorage.getItem("bbc_admin")!=="true"){
+  window.location.href="admin-login.html";
+}
+</script>
+
+<h2 align="center">Member ID Generator</h2>
+
+<div class="wrapper">
+
+  <!-- FRONT -->
+  <div class="id-card front" id="front">
+    <div class="overlay">
+      <div class="photo">
+        <img id="photo">
+      </div>
+      <div class="info">
+        <b>Name:</b> <span id="name"></span><br>
+        <b>Member ID:</b> <span id="memberId"></span><br>
+        <b>Position:</b> <span id="position"></span><br>
+        <b>Status:</b> <span id="status"></span><br>
+        <b>Date Survive:</b> <span id="date"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACK -->
+  <div class="id-card back" id="back">
+    <div class="qr">
+      <img id="qrImg" width="100%" height="100%">
+    </div>
+    <div class="footer">
+      Bunawan Brook Chapter<br>
+      Scan QR to verify legitimacy
+    </div>
+  </div>
+
+</div>
+
+<div align="center">
+  <button onclick="download()">Download ID</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzm9kXBRRFWT60ngW0VjQoDZba4ynjrE2E1Cw23Ybb1783FuTLl7P9K6mrrYZS3gwg_/exec";
+const token = new URLSearchParams(location.search).get("t");
+
+/* LOAD MEMBER */
+fetch(API_URL,{
+  method:"POST",
+  body:JSON.stringify({
+    action:"getMember",
+    token:token
+  })
+})
+.then(r=>r.json())
+.then(m=>{
+  name.textContent = m.fullname;
+  memberId.textContent = m.memberId;
+  position.textContent = m.position;
+  status.textContent = m.status;
+  date.textContent = new Date(m.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+
+  photo.src = m.photo || "logo.png";
+
+  const verifyURL =
+    "https://reymondmendez26-sketch.github.io/bunawan-brook-verify/?t=" +
+    btoa(token);
+
+  qrImg.src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+    encodeURIComponent(verifyURL);
+});
+
+/* DOWNLOAD BOTH SIDES */
+function download(){
+  Promise.all([
+    html2canvas(document.getElementById("front")),
+    html2canvas(document.getElementById("back"))
+  ]).then(c=>{
+    const canvas = document.createElement("canvas");
+    canvas.width = c[0].width * 2;
+    canvas.height = c[0].height;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(c[0],0,0);
+    ctx.drawImage(c[1],c[0].width,0);
+
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "member-id.png";
+    a.click();
+  });
+}
+</script>
+
+</body>
+</html>
